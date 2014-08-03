@@ -7,6 +7,9 @@ import os
 
 from command_executor import execute_command
 
+LOG_DIR = 'logs'
+TEXT_DIR = 'texts'
+
 class ShhShell(object):
 
     def __init__(self):
@@ -31,10 +34,13 @@ class ShhShell(object):
         self.text.bind('<FocusOut>', self.onFocusOut)
 
     def initialize_logging(self):
+        os.system("mkdir -p {}".format(LOG_DIR))
+        os.system("mkdir -p {}".format(TEXT_DIR))
+
         now_str = str(datetime.now()).replace(" ", "_")
-        log_filename = "logs/log-{}".format(now_str)
+        log_filename = "{}/log-{}".format(LOG_DIR, now_str)
         self.log_file = open(log_filename, 'w')
-        text_filename = "texts/text-{}".format(now_str)
+        text_filename = "{}/text-{}".format(TEXT_DIR, now_str)
         self.text_file = open(text_filename, 'w')
 
         os.system("touch shh-text && rm shh-text")
