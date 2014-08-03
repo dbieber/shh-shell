@@ -124,7 +124,7 @@ def email(contents, mailer):
                 text=contents)
 
 @command('check email', require_mailer=True)
-def email(mailer):
+def check_email(mailer):
     subjects = [msg['Subject'] for msg in mailer.check_mail()]
     say(', '.join(subjects))
 
