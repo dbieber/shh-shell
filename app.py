@@ -37,8 +37,8 @@ class ShhShell(object):
         text_filename = "texts/text-{}".format(now_str)
         self.text_file = open(text_filename, 'w')
 
-        os.system("rm shh-text")
-        os.system("rm shh-log")
+        os.system("touch shh-text && rm shh-text")
+        os.system("touch shh-log && rm shh-log")
         os.system("ln -s {} shh-text".format(text_filename))
         os.system("ln -s {} shh-log".format(log_filename))
 
