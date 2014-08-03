@@ -1,85 +1,96 @@
 # shh: the shell for when you're mostly asleep
 
-from datetime import date
 from datetime import datetime
 
 import Tkinter as tk
 import os
-from random import choice
 
-now_str = str(datetime.now()).replace(" ","_")
-log_filename = "logs/nighttype-log-{}".format(now_str)
-log_file = open(log_filename, 'w')
-text_filename = "text/nighttype-text-{}".format(now_str)
-text_file = open(text_filename, 'w')
+from command_executor import execute_command
 
-os.system("rm nighttype-text")
-os.system("rm nighttype-log")
-os.system("ln -s {} nighttype-text".format(text_filename))
-os.system("ln -s {} nighttype-log".format(log_filename))
+class NightTypeApp(object):
 
-current_cmd = ""
+    def __init__(self):
+        self.root = tk.Tk()
+        self.text = tk.Text(self.root,
+                            background='black',
+                            foreground='white',
+                            font=('Roboto Slab', 12))
+        self.initialize_gui()
+        self.initialize_logging()
 
+        self.current_cmd = ''
 
-def feel_lucky(query):
-    os.system('open "http://www.google.com/search?q={}&btnI"'.format(query))
+    def initialize_gui(self):
+        self.root.attributes('-topmost', 1)
+        self.root.focus_set()
+        self.root.geometry('300x200')
+        self.text.pack()
+        self.root.bind('<KeyPress>', self.onKeyPress)
+        self.root.bind('<FocusIn>', self.onFocusIn)
+        self.text.bind('<FocusIn>', self.onTextFocusIn)
+        self.text.bind('<FocusOut>', self.onFocusOut)
 
+    def initialize_logging(self):
+        now_str = str(datetime.now()).replace(" ", "_")
+        log_filename = "logs/nighttype-log-{}".format(now_str)
+        self.log_file = open(log_filename, 'w')
+        text_filename = "texts/nighttype-text-{}".format(now_str)
+        self.text_file = open(text_filename, 'w')
 
-def onKeyPress(event):
-    global current_cmd
+        os.system("rm nighttype-text")
+        os.system("rm nighttype-log")
+        os.system("ln -s {} nighttype-text".format(text_filename))
+        os.system("ln -s {} nighttype-log".format(log_filename))
 
-    log_str = "{}:{},{},{},{},{},{}\n".format(
-        datetime.now(),
-        event.num,
-        event.keysym_num,
-        event.keysym,
-        event.serial,
-        event.state,
-        event.char,
-    )
-    log_file.write(log_str)
-    log_file.flush()
+    def start(self):
+        self.root.mainloop()
 
-    if event.char:
-        current_cmd += event.char
+    def onFocusIn(self, event):
+        self.text.focus_set()
 
-    text_str = event.char
-    if event.keysym == 'Return':
-        text_str = '\n'
+    def onTextFocusIn(self, event):
+        self.root.attributes('-topmost', 1)
+        self.root.attributes('-topmost', 0)
+        os.system('say focused &')
 
-        if current_cmd[:6].upper() == 'STATUS':
-            os.system('say ok')
+    def onFocusOut(self, event):
+        os.system('say focus lost &')
 
-        if current_cmd[:5].upper() == 'LUCKY':
-            query = current_cmd[5:].replace(" ", "+")
-            feel_lucky(query)
+    def onKeyPress(self, event):
+        # Log event
+        log_str = "{}:{},{},{},{},{},{}\n".format(
+            datetime.now(),
+            event.num,
+            event.keysym_num,
+            event.keysym,
+            event.serial,
+            event.state,
+            event.char,
+        )
+        self.log_file.write(log_str)
+        self.log_file.flush()
 
-        if current_cmd[:5].upper() == 'ALARM':
-            queries = [
-                'tell her about it youtube',
-                'wake me up when september ends youtube',
-            ]
-            query = choice(queries)
-            feel_lucky(query)
+        text_str = event.char
 
-        if current_cmd[:3].upper() == 'CMD':
-            pass
-            # os.system(current_cmd[3:])
+        # Handle commands
+        if event.keysym == 'BackSpace':
+            self.current_cmd = self.current_cmd[:-1]
+        elif event.keysym == 'Return':
+            text_str = '\n'
+            cmd = self.current_cmd.strip()
+            self.current_cmd = ''
+            if cmd and cmd[0] == ':':
+                execute_command(cmd[1:])
+        elif event.char:
+            self.current_cmd += event.char
 
-        current_cmd = ''
+        # Edit text file
+        self.text_file.write(text_str)
+        self.text_file.flush()
 
-    # TODO(Bieber): Bring to front a bunch
-
-    text_file.write(text_str)
-    text_file.flush()
-
+def main():
+    app = NightTypeApp()
+    app.start()
 
 if __name__ == '__main__':
-    root = tk.Tk()
-    root.attributes('-topmost', 1)
-    root.focus_set()
-    root.geometry('300x200')
-    text = tk.Text(root, background='black', foreground='white', font=('Roboto Slab', 12))
-    text.pack()
-    root.bind('<KeyPress>', onKeyPress)
-    root.mainloop()
+    main()
