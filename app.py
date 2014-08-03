@@ -7,7 +7,7 @@ import os
 
 from command_executor import execute_command
 
-class NightTypeApp(object):
+class ShhShell(object):
 
     def __init__(self):
         self.root = tk.Tk()
@@ -32,15 +32,15 @@ class NightTypeApp(object):
 
     def initialize_logging(self):
         now_str = str(datetime.now()).replace(" ", "_")
-        log_filename = "logs/nighttype-log-{}".format(now_str)
+        log_filename = "logs/log-{}".format(now_str)
         self.log_file = open(log_filename, 'w')
-        text_filename = "texts/nighttype-text-{}".format(now_str)
+        text_filename = "texts/text-{}".format(now_str)
         self.text_file = open(text_filename, 'w')
 
-        os.system("rm nighttype-text")
-        os.system("rm nighttype-log")
-        os.system("ln -s {} nighttype-text".format(text_filename))
-        os.system("ln -s {} nighttype-log".format(log_filename))
+        os.system("rm shh-text")
+        os.system("rm shh-log")
+        os.system("ln -s {} shh-text".format(text_filename))
+        os.system("ln -s {} shh-log".format(log_filename))
 
     def start(self):
         self.root.mainloop()
@@ -89,7 +89,7 @@ class NightTypeApp(object):
         self.text_file.flush()
 
 def main():
-    app = NightTypeApp()
+    app = ShhShell()
     app.start()
 
 if __name__ == '__main__':
