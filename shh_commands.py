@@ -79,7 +79,11 @@ def status():
 
 @command('say {}')
 def say(text):
-    cmd = 'say "{}" &'.format(text)
+    dt = datetime.now().strftime('%k:%M:%S')
+    with open('tmp-say', 'w') as tmp:
+        print '[{}] Writing "{}" to tmp-say'.format(dt, text)
+        tmp.write(text)
+    cmd = 'cat tmp-say | say &'
     shell(cmd)
 
 @command('shell {}')
@@ -128,13 +132,37 @@ def check_email(mailer):
     subjects = [msg['Subject'] for msg in mailer.check_mail()]
     say(', '.join(subjects))
 
+@command('read email {}', require_mailer=True)
+def read_email(subject_bit, mailer):
+    for msg in mailer.check_mail():
+        if subject_bit.strip().lower() in msg['Subject'].lower():
+            print msg
+            return
+    print 'Not found yet'
+
 @command('num messages', require_mailer=True)
 def num_messages(mailer):
     count = len(mailer.check_mail())
     say('You have {} unread messages'.format(count))
+
+@command('text {} TO {}')
+def send_text(message_text, phone_number):
+    script = """
+    tell application "Messages"
+      send "{}" to buddy "{}" of service "E:dbieber@princeton.edu"
+    end tell
+    """.format(
+        message_text,
+        phone_number
+    )
+    os.system("echo '{}' | osascript".format(script))
 
 @command('reload {}')
 def reload_module(module_name):
     if module_name in sys.modules:
         module = sys.modules[module_name]
         reload(module)
+
+@command('goal {}', require_state=True)
+def set_goal(goal):
+    pass

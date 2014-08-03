@@ -3,7 +3,7 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
 
-from shh_commands import commands
+import shh_commands
 from mailer import Mailer
 
 import logging
@@ -27,7 +27,7 @@ class CommandExecutor(object):
         self.scheduler = CommandScheduler()
 
     def execute(self, cmd_str):
-        for cmd in commands:
+        for cmd in shh_commands.commands:
             executed = cmd.execute_if_match(cmd_str,
                 scheduler=self.scheduler,
                 mailer=self.mailer,
