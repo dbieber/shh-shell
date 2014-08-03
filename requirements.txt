@@ -1,0 +1,8 @@
+APScheduler==3.0.0
+futures==2.1.6
+parsedatetime==1.4
+pytz==2014.4
+redis==2.10.1
+six==1.7.3
+tzlocal==1.1.1
+wsgiref==0.1.2
