@@ -8,7 +8,12 @@ from email.MIMEBase import MIMEBase
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
+import BeautifulSoup
+import HTMLParser
+import textwrap
+
 import os
+
 
 class Mailer(object):
 
@@ -19,7 +24,6 @@ class Mailer(object):
     def login(self, user, passwd=None):
         self.gmail_user = user
         self.gmail_passwd = passwd or getpass.getpass('Password for %s: ' % self.gmail_user)
-
 
     def mail(self, to, subject, text, attach=None):
         msg = MIMEMultipart()
@@ -53,7 +57,66 @@ class Mailer(object):
         for num in reversed(email_ids):
             typ, data = M.fetch(num, '(RFC822)')
             msg = message_from_string(data[0][1])
-            messages.append(msg)
+            messages.append(Message(msg))
 
         M.close()
         return messages
+
+class Message(object):
+
+    def __init__(self, message):
+        self.message = message
+
+    def subject(self):
+        return self.message['Subject']
+
+    def sender(self):
+        return self.message['From']
+
+    def date_str(self):
+        return self.message['Date']
+
+    def text(self):
+        msg = self.message
+        h = HTMLParser.HTMLParser()
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            if content_type == 'text/plain':
+                message = str(part.get_payload())
+                message = message.replace('=C2=A0', ' ')  # non-breaking space
+                message = message.replace('=E2=80=99', "'")  # Apostrophe
+                print 'plain: """{}"""'.format(message)
+
+            elif content_type == 'text/html':
+                body = BeautifulSoup.BeautifulSoup(part.get_payload())
+                p = element_find("p", body)
+                font = element_find("font", body)
+                div = element_find("div", body)
+                synth_msg = textwrap.wrap(synthesize_elements(p, font, div))
+                message = h.unescape(' '.join(synth_msg))
+                message = message.replace('=  ', ' ')  # non-breaking space
+                print 'html: """{}"""'.format(message)
+
+
+        # TODO(Bieber): Shorten URLs to just domain name
+        return message
+
+# Helper functions for parsing body of email
+def element_find(element, body):
+    try:
+        element = body.findAll(element)[0].text
+    except IndexError:
+        element = None
+
+    return element
+
+def synthesize_elements(*arg):
+    message = []
+    for i in range(len(arg)):
+        if arg[i]:
+            message.append(arg[i] + '. ')
+    if not message:
+        message = 'Undefinable'
+    else:
+        message = ', '.join(message)
+    return message

@@ -5,6 +5,7 @@ from apscheduler.triggers.date import DateTrigger
 
 import shh_commands
 from mailer import Mailer
+from shh_state import ShhState
 
 import logging
 import parsedatetime
@@ -25,12 +26,14 @@ class CommandExecutor(object):
     def __init__(self):
         self.mailer = Mailer()
         self.scheduler = CommandScheduler()
+        self.state = ShhState()
 
     def execute(self, cmd_str):
         for cmd in shh_commands.commands:
             executed = cmd.execute_if_match(cmd_str,
                 scheduler=self.scheduler,
                 mailer=self.mailer,
+                state=self.state
             )
             if executed:
                 break

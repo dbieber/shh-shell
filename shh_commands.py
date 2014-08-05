@@ -38,7 +38,10 @@ class Command(object):
         self.regex = regex
         self.params = params
 
-    def execute_if_match(self, cmd_str, scheduler=None, mailer=None):
+    def execute_if_match(self, cmd_str,
+                         scheduler=None,
+                         mailer=None,
+                         state=None):
         match = self.regex.match(cmd_str)
         if match:
             args = match.groups()
@@ -48,6 +51,8 @@ class Command(object):
                 kwargs['scheduler'] = scheduler
             if self.params.get('require_mailer'):
                 kwargs['mailer'] = mailer
+            if self.params.get('require_state'):
+                kwargs['state'] = state
 
             self.func(*args, **kwargs)
             return True
@@ -96,9 +101,29 @@ def shell(cmd):
 def schedule(at, what, scheduler):
     scheduler.schedule(at, what)
 
+@command('help')
+def help():
+    set_of_names = sorted(set(cmd.name for cmd in commands))
+    list_str = ', '.join(set_of_names)
+    help_message = """Welcome to the shh-shell!
+
+The purpose of this shell is to let you use your computer without having to
+exert any effort or do anything that might wake you up, even a little. That
+means no monitors and no mouse. The shell wants to replace the pad of paper
+you keep by your bedside.
+
+All keystrokes are timestamped and logged.
+Type :<command> to execute a command.
+Type :help to pull up this help message.
+
+Available commands are {}.
+"""
+    print help_message.format(list_str)
+
 @command('list commands')
 def list_commands():
-    list_str = ', '.join(cmd.name for cmd in commands)
+    set_of_names = sorted(set(cmd.name for cmd in commands))
+    list_str = ', '.join(set_of_names)
     say(list_str)
 
 @command('list jobs', require_scheduler=True)
@@ -109,36 +134,83 @@ def list_jobs(scheduler):
     ) for at, what in jobs)
     say(job_list_str)
 
-@command('todo {}', require_scheduler=True)
-def save_todo(task, scheduler):
-    pass
+@command('todo {}', require_scheduler=True, require_state=True)
+def save_todo(task, scheduler, state):
+    todo_list = state.get('todo_list', [])
+    todo_list.append(task)
+    state.set('todo_list', todo_list)
+    if not state.get('todo_checkup_scheduled'):
+        schedule('10pm', 'email_todo_summary', scheduler)
+    state.set('todo_checkup_scheduled', True)
 
+@command('list todos', require_state=True)
+def list_todos(state):
+    todo_list = state.get('todo_list', [])
+    say(', '.join(todo_list))
+
+@command('email_todo_summary', require_mailer=True, require_state=True)
+def email_todo_summary(mailer, state):
+    todo_list = state.get('todo_list', [])
+    todo_list_str = '\n'.join('-  {}'.format(item) for item in todo_list)
+    contents = """Did you accomplish what you set out to do?
+
+        {}""".format(todo_list_str)
+    subject = 'TODO Summary for {}'.format(datetime.now().strftime("%D"))
+    mailer.mail(to='david810+shh@gmail.com',
+                subject=subject,
+                text=contents)
+
+    state.set('todo_checkup_scheduled', False)
+
+@command('clear todos', require_state=True)
+def clear_todos(state):
+    state.delete('todo_list')
+
+@command('reading list {}', require_state=True)
+def reading_list(state):
+    books = state.get('reading_list', [])
+    say(' ,'.join(books))
+
+@command('reading list {}', require_state=True)
+def add_to_reading_list(book, state):
+    books = state.get('reading_list', [])
+    books.append(book)
+    state.set(reading_list, books)
+
+@command('login', require_mailer=True)
+@command('mail login', require_mailer=True)
 @command('email login', require_mailer=True)
 def email_login_default(mailer):
     email_login('david810@gmail.com', mailer)
 
+@command('login {}', require_mailer=True)
+@command('mail login {}', require_mailer=True)
 @command('email login {}', require_mailer=True)
 def email_login(user, mailer):
     mailer.login(user)
 
+@command('send email {}', require_mailer=True)
 @command('email {}', require_mailer=True)
 def email(contents, mailer):
     mailer.mail(to='david810+shh@gmail.com',
                 subject='shh {}'.format(datetime.now().strftime("%D %H:%M")),
                 text=contents)
 
+@command('check mail', require_mailer=True)
 @command('check email', require_mailer=True)
 def check_email(mailer):
-    subjects = [msg['Subject'] for msg in mailer.check_mail()]
+    subjects = [msg.subject() for msg in mailer.check_mail()]
     say(', '.join(subjects))
 
+@command('read mail {}', require_mailer=True)
 @command('read email {}', require_mailer=True)
 def read_email(subject_bit, mailer):
     for msg in mailer.check_mail():
-        if subject_bit.strip().lower() in msg['Subject'].lower():
-            print msg
+        if subject_bit.strip().lower() in msg.subject().lower():
+            # TODO(Bieber): Say with timeout
+            print msg.text()
             return
-    print 'Not found yet'
+    print 'Not found'
 
 @command('num messages', require_mailer=True)
 def num_messages(mailer):
@@ -157,12 +229,25 @@ def send_text(message_text, phone_number):
     )
     os.system("echo '{}' | osascript".format(script))
 
+@command('reload')
+def reload_this():
+    reload_module(__name__)
+
 @command('reload {}')
 def reload_module(module_name):
     if module_name in sys.modules:
         module = sys.modules[module_name]
         reload(module)
+    else:
+        say('{} not found'.format(module_name))
 
 @command('goal {}', require_state=True)
-def set_goal(goal):
-    pass
+def set_goal(goal, state):
+    goals = state.get('goals', [])
+    goals.append(goal)
+    state.set('goals', goals)
+
+@command('list goals', require_state=True)
+def list_goals(state):
+    goals = state.get('goals', [])
+    say(', '.join(goals))
