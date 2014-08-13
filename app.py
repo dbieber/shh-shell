@@ -1,14 +1,14 @@
 # shh: the shell for when you're mostly asleep
 
-from datetime import datetime
-
-import Tkinter as tk
-import os
+from __future__ import absolute_import
 
 from command_executor import execute_command
+from datetime import datetime
+from settings import settings
 
-LOG_DIR = 'logs'
-TEXT_DIR = 'texts'
+import os
+import Tkinter as tk
+
 
 class ShhShell(object):
 
@@ -34,13 +34,13 @@ class ShhShell(object):
         self.text.bind('<FocusOut>', self.onFocusOut)
 
     def initialize_logging(self):
-        os.system("mkdir -p {}".format(LOG_DIR))
-        os.system("mkdir -p {}".format(TEXT_DIR))
+        os.system("mkdir -p {}".format(settings.secure.LOG_DIR))
+        os.system("mkdir -p {}".format(settings.secure.TEXT_DIR))
 
         now_str = str(datetime.now()).replace(" ", "_")
-        log_filename = "{}/log-{}".format(LOG_DIR, now_str)
+        log_filename = "{}/log-{}".format(settings.secure.LOG_DIR, now_str)
         self.log_file = open(log_filename, 'w')
-        text_filename = "{}/text-{}".format(TEXT_DIR, now_str)
+        text_filename = "{}/text-{}".format(settings.secure.TEXT_DIR, now_str)
         self.text_file = open(text_filename, 'w')
 
         os.system("touch shh-text && rm shh-text")
@@ -95,6 +95,7 @@ class ShhShell(object):
         self.text_file.flush()
 
 def main():
+    # TODO(Bieber): Monitor app for failure and restart
     app = ShhShell()
     app.start()
 
