@@ -1,10 +1,14 @@
+from __future__ import absolute_import
+
+from datetime import datetime
+from random import choice
+from utils import sayable_datetime
+
+from settings.secure_settings import *
+
 import os
 import re
 import sys
-from datetime import datetime
-from random import choice
-
-from utils import sayable_datetime
 
 commands = []
 
@@ -156,7 +160,7 @@ def email_todo_summary(mailer, state):
 
         {}""".format(todo_list_str)
     subject = 'TODO Summary for {}'.format(datetime.now().strftime("%D"))
-    mailer.mail(to='david810+shh@gmail.com',
+    mailer.mail(to=DEFAULT_EMAIL_RECIPIENT,
                 subject=subject,
                 text=contents)
 
@@ -181,7 +185,7 @@ def add_to_reading_list(book, state):
 @command('mail login', require_mailer=True)
 @command('email login', require_mailer=True)
 def email_login_default(mailer):
-    email_login('david810@gmail.com', mailer)
+    email_login(DEFAULT_EMAIL, mailer)
 
 @command('login {}', require_mailer=True)
 @command('mail login {}', require_mailer=True)
@@ -192,7 +196,7 @@ def email_login(user, mailer):
 @command('send email {}', require_mailer=True)
 @command('email {}', require_mailer=True)
 def email(contents, mailer):
-    mailer.mail(to='david810+shh@gmail.com',
+    mailer.mail(to=DEFAULT_EMAIL_RECIPIENT,
                 subject='shh {}'.format(datetime.now().strftime("%D %H:%M")),
                 text=contents)
 
@@ -221,11 +225,12 @@ def num_messages(mailer):
 def send_text(message_text, phone_number):
     script = """
     tell application "Messages"
-      send "{}" to buddy "{}" of service "E:dbieber@princeton.edu"
+      send "{}" to buddy "{}" of service {}
     end tell
     """.format(
         message_text,
-        phone_number
+        phone_number,
+        DEFAULT_SERVICE,
     )
     os.system("echo '{}' | osascript".format(script))
 

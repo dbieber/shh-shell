@@ -4,3 +4,5 @@ texts/
 logs/
 *.pyc
 *~
+tmp-say
+secure_settings.py
