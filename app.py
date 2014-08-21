@@ -7,6 +7,7 @@ from datetime import datetime
 from settings import settings
 
 import os
+from multiprocessing import Process
 import Tkinter as tk
 
 
@@ -94,10 +95,13 @@ class ShhShell(object):
         self.text_file.write(text_str)
         self.text_file.flush()
 
-def main():
-    # TODO(Bieber): Monitor app for failure and restart
+def launch_app():
     app = ShhShell()
     app.start()
+
+def main():
+    # TODO(Bieber): Monitor app for failure and restart
+    launch_app()
 
 if __name__ == '__main__':
     main()

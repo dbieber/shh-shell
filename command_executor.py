@@ -57,8 +57,18 @@ class CommandScheduler(object):
 
         self.datetime_parser = parsedatetime.Calendar()
 
+    def parse(self, at):
+        return self.datetime_parser.parseDT(at)[0]
+
+    def already_scheduled(self, what):
+        # TODO(Bieber): Improve efficiency with a dict
+        for scheduled_at, scheduled_what in self.get_jobs():
+            if what == scheduled_what:
+                return True
+        return False
+
     def schedule(self, at, what):
-        dt = self.datetime_parser.parseDT(at)[0]
+        dt = self.parse(at)
         trigger = DateTrigger(dt)
         self.scheduler.add_job(execute_command,
             trigger=trigger,

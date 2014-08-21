@@ -1,10 +1,11 @@
 from __future__ import absolute_import
+from __future__ import print_function
 
 from datetime import datetime
 from random import choice
 from utils import sayable_datetime
 
-from settings.secure_settings import *
+from settings import settings
 
 import os
 import re
@@ -90,7 +91,7 @@ def status():
 def say(text):
     dt = datetime.now().strftime('%k:%M:%S')
     with open('tmp-say', 'w') as tmp:
-        print '[{}] Writing "{}" to tmp-say'.format(dt, text)
+        print('[{}] Writing "{}" to tmp-say'.format(dt, text))
         tmp.write(text)
     cmd = 'cat tmp-say | say &'
     shell(cmd)
@@ -98,7 +99,7 @@ def say(text):
 @command('shell {}')
 def shell(cmd):
     dt = datetime.now().strftime('%k:%M:%S')
-    print "[{}] Executing command: '{}'".format(dt, cmd)
+    print("[{}] Executing command: '{}'".format(dt, cmd))
     os.system(cmd)
 
 @command('at {}:{}', require_scheduler=True)
@@ -122,7 +123,7 @@ Type :help to pull up this help message.
 
 Available commands are {}.
 """
-    print help_message.format(list_str)
+    print(help_message.format(list_str))
 
 @command('list commands')
 def list_commands():
@@ -141,11 +142,13 @@ def list_jobs(scheduler):
 @command('todo {}', require_scheduler=True, require_state=True)
 def save_todo(task, scheduler, state):
     todo_list = state.get('todo_list', [])
+    # TODO(Bieber): Store and use other information about TODOs like deadline
     todo_list.append(task)
     state.set('todo_list', todo_list)
-    if not state.get('todo_checkup_scheduled'):
-        schedule('10pm', 'email_todo_summary', scheduler)
-    state.set('todo_checkup_scheduled', True)
+
+    task = 'email_todo_summary'
+    if not scheduler.already_scheduled(task):
+        schedule('10pm', task, scheduler)
 
 @command('list todos', require_state=True)
 def list_todos(state):
@@ -160,11 +163,9 @@ def email_todo_summary(mailer, state):
 
         {}""".format(todo_list_str)
     subject = 'TODO Summary for {}'.format(datetime.now().strftime("%D"))
-    mailer.mail(to=DEFAULT_EMAIL_RECIPIENT,
+    mailer.mail(to=settings.secure.DEFAULT_EMAIL_RECIPIENT,
                 subject=subject,
                 text=contents)
-
-    state.set('todo_checkup_scheduled', False)
 
 @command('clear todos', require_state=True)
 def clear_todos(state):
@@ -185,7 +186,7 @@ def add_to_reading_list(book, state):
 @command('mail login', require_mailer=True)
 @command('email login', require_mailer=True)
 def email_login_default(mailer):
-    email_login(DEFAULT_EMAIL, mailer)
+    email_login(settings.secure.DEFAULT_EMAIL, mailer)
 
 @command('login {}', require_mailer=True)
 @command('mail login {}', require_mailer=True)
@@ -196,7 +197,7 @@ def email_login(user, mailer):
 @command('send email {}', require_mailer=True)
 @command('email {}', require_mailer=True)
 def email(contents, mailer):
-    mailer.mail(to=DEFAULT_EMAIL_RECIPIENT,
+    mailer.mail(to=settings.secure.DEFAULT_EMAIL_RECIPIENT,
                 subject='shh {}'.format(datetime.now().strftime("%D %H:%M")),
                 text=contents)
 
@@ -212,9 +213,9 @@ def read_email(subject_bit, mailer):
     for msg in mailer.check_mail():
         if subject_bit.strip().lower() in msg.subject().lower():
             # TODO(Bieber): Say with timeout
-            print msg.text()
+            print(msg.text())
             return
-    print 'Not found'
+    print('Not found')
 
 @command('num messages', require_mailer=True)
 def num_messages(mailer):
@@ -230,7 +231,7 @@ def send_text(message_text, phone_number):
     """.format(
         message_text,
         phone_number,
-        DEFAULT_SERVICE,
+        settings.secure.DEFAULT_SERVICE,
     )
     os.system("echo '{}' | osascript".format(script))
 
