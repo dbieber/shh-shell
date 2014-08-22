@@ -18,7 +18,7 @@ class ShhShell(object):
         self.text = tk.Text(self.root,
                             background='black',
                             foreground='white',
-                            font=('Roboto Slab', 12))
+                            font=('Roboto Slab', 48))
         self.initialize_gui()
         self.initialize_logging()
 
@@ -27,7 +27,7 @@ class ShhShell(object):
     def initialize_gui(self):
         self.root.attributes('-topmost', 1)
         self.root.focus_set()
-        self.root.geometry('300x200')
+        self.root.geometry('800x600')
         self.text.pack()
         self.root.bind('<KeyPress>', self.onKeyPress)
         self.root.bind('<FocusIn>', self.onFocusIn)
