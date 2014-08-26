@@ -236,7 +236,7 @@ def send_text(message_text, phone_number):
         phone_number,
         settings.secure.DEFAULT_SERVICE,
     )
-    os.system("echo '{}' | osascript".format(script))
+    shell("echo '{}' | osascript".format(script))
 
 @command('reload')
 def reload_this():
@@ -282,3 +282,19 @@ def readlist(list_name, state):
     list_id = "list:{}".format(list_name)
     items = state.get(list_id, [])
     say(', '.join(items))
+
+@command('bc {}')
+def calculate(expression):
+    dt = datetime.now().strftime('%k:%M:%S')
+    with open('tmp-bc', 'w') as tmp:
+        print('[{}] Writing "{}" to tmp-bc'.format(dt, expression))
+        tmp.write(expression)
+        tmp.write('\n')
+    cmd = 'cat tmp-bc | bc | say &'
+    shell(cmd)
+
+@command('bc', require_app_manager=True)
+def calculator(app_manager):
+    def handle_line(line):
+        calculate(line)
+    app_manager.start_app(handle_line=handle_line)
