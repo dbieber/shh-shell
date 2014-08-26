@@ -276,3 +276,9 @@ def list_app(list_name, app_manager, state):
         state.set(list_id, items)
 
     app_manager.start_app(handle_line=handle_line)
+
+@command('readlist {}', require_state=True)
+def readlist(list_name, state):
+    list_id = "list:{}".format(list_name)
+    items = state.get(list_id, [])
+    say(', '.join(items))
