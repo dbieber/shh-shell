@@ -20,10 +20,14 @@ def execute_command(cmd):
         executor_singleton = CommandExecutor()
     executor_singleton.execute(cmd)
 
+def setup_executor(app_manager=None):
+    global executor_singleton
+    executor_singleton = CommandExecutor(app_manager=app_manager)
 
 class CommandExecutor(object):
 
-    def __init__(self):
+    def __init__(self, app_manager=None):
+        self.app_manager = app_manager
         self.mailer = Mailer()
         self.scheduler = CommandScheduler()
         self.state = ShhState()
@@ -31,6 +35,7 @@ class CommandExecutor(object):
     def execute(self, cmd_str):
         for cmd in shh_commands.commands:
             executed = cmd.execute_if_match(cmd_str,
+                app_manager=self.app_manager,
                 scheduler=self.scheduler,
                 mailer=self.mailer,
                 state=self.state

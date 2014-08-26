@@ -2,11 +2,11 @@
 
 from __future__ import absolute_import
 
-from command_executor import execute_command
 from datetime import datetime
 from settings import settings
 
 import os
+from app_manager import AppManager
 from multiprocessing import Process
 import Tkinter as tk
 
@@ -23,6 +23,7 @@ class ShhShell(object):
         self.initialize_logging()
 
         self.current_cmd = ''
+        self.app_manager = AppManager()
 
     def initialize_gui(self):
         self.root.attributes('-topmost', 1)
@@ -81,13 +82,14 @@ class ShhShell(object):
 
         # Handle commands
         if event.keysym == 'BackSpace':
+            if self.app_manager.in_app() and self.current_cmd == '':
+                self.app_manager.quit_app()
             self.current_cmd = self.current_cmd[:-1]
         elif event.keysym == 'Return':
             text_str = '\n'
             cmd = self.current_cmd.strip()
             self.current_cmd = ''
-            if cmd and cmd[0] == ':':
-                execute_command(cmd[1:])
+            self.app_manager.handle_line(cmd)
         elif event.char:
             self.current_cmd += event.char
 

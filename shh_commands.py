@@ -44,6 +44,7 @@ class Command(object):
         self.params = params
 
     def execute_if_match(self, cmd_str,
+                         app_manager=None,
                          scheduler=None,
                          mailer=None,
                          state=None):
@@ -52,6 +53,8 @@ class Command(object):
             args = match.groups()
             kwargs = {}
 
+            if self.params.get('require_app_manager'):
+                kwargs['app_manager'] = app_manager
             if self.params.get('require_scheduler'):
                 kwargs['scheduler'] = scheduler
             if self.params.get('require_mailer'):
@@ -257,3 +260,19 @@ def set_goal(goal, state):
 def list_goals(state):
     goals = state.get('goals', [])
     say(', '.join(goals))
+
+@command('clear', require_gui=True)
+def clear(gui=None):
+    pass
+
+@command('list {}', require_app_manager=True, require_state=True)
+def list_app(list_name, app_manager, state):
+    list_id = "list:{}".format(list_name)
+
+    def handle_line(line):
+        say(line)
+        items = state.get(list_id, [])
+        items.append(line)
+        state.set(list_id, items)
+
+    app_manager.start_app(handle_line=handle_line)
