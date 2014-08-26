@@ -22,7 +22,11 @@ class AppManager(object):
             # TODO(Bieber): These commands should be treated like any other app
             execute_command(line[1:])
 
-    def start_app(self, handle_line=None):
+    def start_app(self, handle_line=None, handle_start=None):
         self.current_app = {
-            'handle_line': handle_line
+            'handle_line': handle_line,
+            'handle_start': handle_start,
         }
+
+        func = self.current_app.get('handle_start')
+        func and func()

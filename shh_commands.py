@@ -214,6 +214,7 @@ def check_email(mailer):
 @command('read email {}', require_mailer=True)
 def read_email(subject_bit, mailer):
     for msg in mailer.check_mail():
+        # TODO(Bieber): Use fuzzy select
         if subject_bit.strip().lower() in msg.subject().lower():
             # TODO(Bieber): Say with timeout
             print(msg.text())
@@ -267,6 +268,7 @@ def clear(gui=None):
 
 @command('list {}', require_app_manager=True, require_state=True)
 def list_app(list_name, app_manager, state):
+    # TODO(Bieber): Use fuzzy select
     list_id = "list:{}".format(list_name)
 
     def handle_line(line):
@@ -298,3 +300,28 @@ def calculator(app_manager):
     def handle_line(line):
         calculate(line)
     app_manager.start_app(handle_line=handle_line)
+
+@command('solfege', require_app_manager=True)
+def launch_solfege(app_manager):
+    def handle_line(line):
+        # TODO(Bieber): Write keyboard shortcuts for solfege
+        pass
+    def handle_start():
+        sys.path.append('/Users/dbieber/code/pitch')
+        import solfege_interface
+        solfege_interface.start_app()
+
+    app_manager.start_app(
+        handle_line=handle_line,
+        handle_start=handle_start,
+    )
+
+@command('recorder', require_app_manager=True)
+def launch_recorder(app_manager):
+    # TODO(Bieber): Implement recorder
+    pass
+
+@command('piano', require_app_manager=True)
+def launch_piano(app_manager):
+    # TODO(Bieber): Implement piano
+    pass
