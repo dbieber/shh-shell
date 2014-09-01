@@ -18,7 +18,7 @@ class ShhShell(object):
         self.text = tk.Text(self.root,
                             background='black',
                             foreground='white',
-                            font=('Roboto Slab', 48))
+                            font=('Roboto Slab', 72))
         self.initialize_gui()
         self.initialize_logging()
 
