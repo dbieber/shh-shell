@@ -285,6 +285,27 @@ def readlist(list_name, state):
     items = state.get(list_id, [])
     say(', '.join(items))
 
+@command('emaillist {}', require_mailer=True, require_state=True)
+def emaillist(list_name, mailer, state):
+    list_id = "list:{}".format(list_name)
+    items = state.get(list_id, [])
+
+    list_str = '\n'.join('-  {}'.format(item) for item in items)
+    contents = """{}
+
+        {}""".format(list_name, list_str)
+    subject = '{} at {}'.format(list_name, datetime.now().strftime("%D"))
+    mailer.mail(to=settings.secure.DEFAULT_EMAIL_RECIPIENT,
+                subject=subject,
+                text=contents)
+
+@command('listlists', require_state=True)
+def listlists(state):
+    prefix = 'shh:list:'
+    lists = filter(lambda k: k[0:len(prefix)] == prefix, state.redis.keys())
+    list_names = map(lambda l: l[len(prefix):], lists)
+    say(', '.join(list_names))
+
 @command('bc {}')
 def calculate(expression):
     dt = datetime.now().strftime('%k:%M:%S')
