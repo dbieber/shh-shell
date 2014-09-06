@@ -70,7 +70,6 @@ class Command(object):
 def alarm():
     query = choice([
         'tell her about it YouTube',
-        'wake me up when September ends YouTube',
         'piano man YouTube',
         'rhapsody in blue YouTube',
     ])
@@ -272,6 +271,10 @@ def list_app(list_name, app_manager, state):
     list_id = "list:{}".format(list_name)
 
     def handle_line(line):
+        line = line.strip()
+        if not line:
+            return
+
         say(line)
         items = state.get(list_id, [])
         items.append(line)
