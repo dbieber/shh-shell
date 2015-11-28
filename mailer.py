@@ -1,5 +1,6 @@
 import getpass
 import imaplib
+import keyring
 import smtplib
 
 from email import Encoders
@@ -7,6 +8,8 @@ from email import message_from_string
 from email.MIMEBase import MIMEBase
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
+
+from settings.secure_settings import *
 
 import BeautifulSoup
 import HTMLParser
@@ -17,15 +20,32 @@ import os
 
 class Mailer(object):
 
-    def __init__(self, user="you@should.login", passwd="wrong password"):
+    def __init__(self, user=None, passwd=None):
         self.gmail_user = user
         self.gmail_passwd = passwd
 
-    def login(self, user, passwd=None):
+    def login(self, user, passwd=None, stay_logged_in=True):
         self.gmail_user = user
-        self.gmail_passwd = passwd or getpass.getpass('Password for %s: ' % self.gmail_user)
+
+        if passwd is None:
+            passwd = keyring.get_password('shh-mailer', self.gmail_user)
+        if passwd is None:
+            passwd = getpass.getpass('Password for %s: ' % self.gmail_user)
+
+        self.gmail_passwd = passwd
+
+        if stay_logged_in:
+            keyring.set_password('shh-mailer', self.gmail_user, self.gmail_passwd)
+
+    def logout(self):
+        keyring.delete_password('shh-mailer', self.gmail_user)
+        self.gmail_user = None
+        self.passwd = None
 
     def mail(self, to, subject, text, attach=None):
+        if self.gmail_user is None:
+            self.login(DEFAULT_EMAIL)
+
         msg = MIMEMultipart()
         msg['From'] = self.gmail_user
         msg['To'] = to
@@ -46,6 +66,9 @@ class Mailer(object):
         mailServer.close()
 
     def check_mail(self):
+        if self.gmail_user is None:
+            self.login(DEFAULT_EMAIL)
+
         # TODO(Bieber): Try out 'with' semantics
         M = imaplib.IMAP4_SSL('imap.gmail.com')
         M.login(self.gmail_user, self.gmail_passwd)

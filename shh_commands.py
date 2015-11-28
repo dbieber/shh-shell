@@ -196,6 +196,12 @@ def email_login_default(mailer):
 def email_login(user, mailer):
     mailer.login(user)
 
+@command('logout', require_mailer=True)
+@command('mail logout', require_mailer=True)
+@command('email logout', require_mailer=True)
+def email_logout_default(mailer):
+    mailer.logout()
+
 @command('send email {}', require_mailer=True)
 @command('email {}', require_mailer=True)
 def email(contents, mailer):
@@ -216,7 +222,7 @@ def read_email(subject_bit, mailer):
         # TODO(Bieber): Use fuzzy select
         if subject_bit.strip().lower() in msg.subject().lower():
             # TODO(Bieber): Say with timeout
-            print(msg.text())
+            say(msg.text()[:100])
             return
     print('Not found')
 
