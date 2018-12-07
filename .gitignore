@@ -6,3 +6,4 @@ logs/
 *~
 tmp-say
 secure_settings.py
+dump.rdb
