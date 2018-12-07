@@ -44,4 +44,4 @@ Then, start shh-shell by running app.py.
 
 tl;dr Type in the shh-shell window with your eyes closed and monitor off.
 
-More detailed instructions for using the shh-shell are available at davidbieber.com/projects/shh-shell
+More detailed instructions for using the shh-shell are available at [davidbieber.com/projects/shh-shell](https://davidbieber.com/projects/shh-shell).
