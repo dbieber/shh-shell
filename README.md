@@ -28,7 +28,7 @@ Then, edit settings/secure_settings.py with your settings.
 
 **DEFAULT_EMAIL_RECIPIENT**: The email address to send emails to.
 
-**DEFAULT_SERVICE**: The Mac Automater service
+**DEFAULT_SERVICE**: The Mac Automator service to use for sending text messages / iMessages.
 
 ## Starting the shh-shell
 
